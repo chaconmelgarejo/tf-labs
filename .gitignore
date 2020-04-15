@@ -6,6 +6,8 @@
 *.tfstate.*
 # personal vars
 *.tfvars
+#my backend conf
+backend.tf
 
 # Crash log files
 crash.log
