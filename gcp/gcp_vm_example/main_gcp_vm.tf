@@ -1,11 +1,14 @@
-resource "google_compute_instance" "vm_instance" {
+# tf-labs 
+# create with good vibes by: @chaconmelgarejo
+# description: create with tf simple vm using backend & vars on gcp
+
+resource "google_compute_instance" "gce_instance" {
   project      = var.project_name
-  name         = var.instance_name
-  zone         = var.instance_zone
-  machine_type = var.instance_type
+  name         = var.vm_name
+  machine_type = var.vm_type
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-9"
+      image = var.vm_image
       }
   }
   network_interface {

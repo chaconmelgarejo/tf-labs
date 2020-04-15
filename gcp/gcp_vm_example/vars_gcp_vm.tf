@@ -1,15 +1,26 @@
+# tf-labs 
+# create with good vibes by: @chaconmelgarejo
+# description: create with tf simple vm using backend & vars on gcp
 variable "project_name" {
+  default ="default"
 }
 
-variable "instance_name" {
+variable "vm_name" {
   default = "my-default-vm"
 }
-variable "instance_zone" {
+
+variable "vm_zone" {
   default = "us-west1-b"
 }
-variable "instance_type" {
-  default = "n1-standard-1"
-  }
-variable "region" {
+
+variable "vm_type" {
+  default = "f1-nano"
+}
+
+variable "vm_image" {
+  default = "debian-cloud/debian-9"
+}
+
+variable "vm_region" {
   default = "us-west1"
 }

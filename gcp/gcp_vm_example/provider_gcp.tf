@@ -1,10 +1,7 @@
+# tf-labs 
+# create with good vibes by: @chaconmelgarejo
+# description: define provider & backend conf
 provider "google" {
-    region      = var.region
-}
-
-terraform {
-  backend "gcs" {
-    bucket  = "cs-infra"
-    prefix  = "terraform/dev"
-  }
+    region  = var.vm_region
+    zone    = var.vm_zone
 }
