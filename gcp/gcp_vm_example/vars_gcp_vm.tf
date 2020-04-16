@@ -14,7 +14,7 @@ variable "vm_zone" {
 }
 
 variable "vm_type" {
-  default = "f1-nano"
+  default = "f1-micro"
 }
 
 variable "vm_image" {
