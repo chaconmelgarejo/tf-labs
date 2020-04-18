@@ -1,6 +1,7 @@
 # tf-labs 
 # create with good vibes by: @chaconmelgarejo
-# description: testing simple tf arch with modulesmodule "main-vpc" {
+# description: testing simple tf arch with modules
+module "main-vpc" {
   source     = "../modules/vpc"
   env        = "dev"
   vm_region  = var.vm_region
