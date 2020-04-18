@@ -16,3 +16,11 @@ variable "cluster_zone" {
 variable "cluster_region" {
   default = "us-central1"
 }
+
+variable "cluster_network" {
+  default = "default"
+}
+
+variable "cluster_subnetwork" {
+  default = "default"
+}

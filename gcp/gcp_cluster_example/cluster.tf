@@ -7,6 +7,10 @@ resource "google_container_cluster" "primary" {
   project  = var.project_name
   master_authorized_networks_config {}
 
+  network = var.cluster_network
+  subnetwork = var.cluster_subnetwork
+  logging_service = "logging.googleapis.com/kubernetes"
+
   initial_node_count       = 1
 
   master_auth {
