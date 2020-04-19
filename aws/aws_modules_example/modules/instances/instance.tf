@@ -50,3 +50,6 @@ resource "aws_key_pair" "mykey" {
   public_key = file("${var.path_key}")
 }
 
+output "ip" {
+  value = aws_instance.my_vm.public_ip
+}

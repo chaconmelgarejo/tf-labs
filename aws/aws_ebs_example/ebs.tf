@@ -28,3 +28,7 @@ resource "aws_ebs_volume" "my_block" {
   availability_zone = var.vm_zone
   size              = 100
 }
+
+output "ip" {
+  value = aws_instance.my_vm.public_ip
+}
