@@ -23,10 +23,10 @@ resource "aws_instance" "my_vm" {
     Name         = "vm-ebs"
   }
 }
-
+# 30 GB Free Tier for EBS
 resource "aws_ebs_volume" "my_block" {
   availability_zone = var.vm_zone
-  size              = 100
+  size              = 30
 }
 
 output "ip" {

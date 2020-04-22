@@ -7,8 +7,8 @@ resource "azurerm_virtual_machine" "main-vm" {
   location              = azurerm_resource_group.dev_rg.location
   resource_group_name   = azurerm_resource_group.dev_rg.name
   network_interface_ids = [azurerm_network_interface.main.id]
-  vm_size               = "Standard_DS1_v2"
-
+  vm_size               = var.vm_size
+  
   # this line to delete the OS disk automatically when deleting the VM
   delete_os_disk_on_termination = true
 
@@ -18,7 +18,7 @@ resource "azurerm_virtual_machine" "main-vm" {
   storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
   storage_os_disk {
@@ -27,14 +27,20 @@ resource "azurerm_virtual_machine" "main-vm" {
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
+
   os_profile {
     computer_name  = var.hostname
     admin_username = var.username
-    admin_password = var.pass
   }
+
   os_profile_linux_config {
-    disable_password_authentication = false
+    disable_password_authentication = true
+    ssh_keys {
+      path     = "/home/${var.username}/.ssh/authorized_keys"
+      key_data = file(var.path_key)
+    }
   }
+
   tags = {
     environment = "${var.prefix}-vm"
   }

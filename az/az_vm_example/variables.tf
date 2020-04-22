@@ -41,3 +41,9 @@ variable "username" {
 variable "pass" {
     default = "Password1234!"
 }
+
+variable "vm_size"{
+    default = "Standard_A1_v2"
+}
+
+variable "path_key"{}

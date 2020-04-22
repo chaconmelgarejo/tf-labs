@@ -1,14 +1,14 @@
 
+# tf-labs 
+# create with good vibes by: @chaconmelgarejo
+# description: create with tf simple vm using azure
+
 resource "azurerm_virtual_network" "dev-network" {
   name                = var.network_name
   resource_group_name = azurerm_resource_group.dev_rg.name
   location            = azurerm_resource_group.dev_rg.location
   address_space       = [var.network]
 }
-
-# tf-labs 
-# create with good vibes by: @chaconmelgarejo
-# description: create with tf simple vm using azure
 
 resource "azurerm_subnet" "internal" {
   name                 = var.subnet_private_name
@@ -43,6 +43,18 @@ resource "azurerm_network_security_group" "my_sg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "web2bastion"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
