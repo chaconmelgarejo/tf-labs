@@ -84,3 +84,67 @@ resource "google_compute_instance_group_manager" "appserver" {
     initial_delay_sec = 300
   }
 }
+
+resource "google_compute_backend_service" "staging_service" {
+  name      = "dev-service"
+  port_name = "http"
+  protocol  = "HTTP"
+  project = var.project_name
+
+  backend {
+    group = google_compute_instance_group_manager.appserver.instance_group
+  }
+
+  health_checks = [
+    google_compute_health_check.autohealing.self_link,
+  ]
+}
+
+resource "google_compute_global_address" "default" {
+  name = "global-appserver-ip"
+  project = var.project_name
+}
+
+
+resource "google_compute_global_forwarding_rule" "default" {
+  name = "fw-rule"
+  project = var.project_name
+  target = google_compute_target_http_proxy.default.self_link
+  ip_address = google_compute_global_address.default.address
+  port_range = "80"
+}
+
+resource "google_compute_target_http_proxy" "default" {
+  name = "http-proxy"
+  project = var.project_name
+  url_map = google_compute_url_map.default.self_link
+}
+
+resource "google_compute_url_map" "default" {
+  name = "load-balancer"
+  project       = var.project_name
+  default_service = google_compute_backend_service.staging_service.self_link
+}
+
+# resource "google_compute_url_map" "default" {
+#   name = "load-balancer"
+#   description = "URL Map"
+#   project = var.project_name
+#   default_service = google_compute_backend_service.staging_service.self_link
+#
+#   host_rule {
+#     hosts = [google_compute_global_address.default.address]
+#     path_matcher = "allpaths"
+#   }
+#
+#   path_matcher {
+#     name            = "allpaths"
+#     default_service = google_compute_backend_service.staging_service.self_link
+#
+#   path_rule {
+#       paths   = ["/*"]
+#       service = google_compute_backend_service.staging_service.self_link
+#     }
+#   }
+#
+# }

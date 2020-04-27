@@ -34,3 +34,23 @@ resource "google_compute_firewall" "default" {
 
   target_tags = ["webserver","http-server"]
 }
+
+resource "google_compute_firewall" "hc-lb" {
+  ## firewall rules enabling the load balancer health checks
+  name    = "monitor-firewall"
+  project       = var.project_name
+  network = google_compute_network.our_vpc.name
+  description = "allow Google health checks and network load balancers access"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["1337"]
+  }
+
+  source_ranges = ["35.191.0.0/16", "130.211.0.0/22", "209.85.152.0/22", "209.85.204.0/22"]
+  target_tags   = ["webserver","http-server"]
+}
