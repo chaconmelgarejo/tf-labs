@@ -2,11 +2,13 @@
 # create with good vibes by: @chaconmelgarejo
 # description: gcp labs - testing templates & groups for vm
 
-resource "google_compute_instance_template" "default" {
-  name        = var.vm_name
-  project     = var.project_name
-  description = "This template is used to create app server instances."
 
+#check the AZ data
+data "google_compute_zones" "available" {}
+
+# creating instance template
+resource "google_compute_instance_template" "web-it" {
+  name        = var.vm_name
   tags = ["webserver", "http-server"]
 
   labels = {
@@ -14,7 +16,6 @@ resource "google_compute_instance_template" "default" {
     app="web"
   }
 
-  instance_description = "description assigned to instances"
   machine_type         = var.vm_type
   can_ip_forward       = false
   metadata_startup_script = var.gs_script
@@ -32,13 +33,12 @@ resource "google_compute_instance_template" "default" {
   }
 
   network_interface {
-    subnetwork = google_compute_subnetwork.subnet01.self_link
+    subnetwork = google_compute_subnetwork.subnets.self_link
     access_config {}
   }
 
 
   metadata = {
-    foo = "bar"
     metadata_startup_script = var.gs_script
   }
 
@@ -47,104 +47,38 @@ resource "google_compute_instance_template" "default" {
   }
 }
 
-
-
-resource "google_compute_health_check" "autohealing" {
-  name                = "autohealing-health-check"
-  check_interval_sec  = 5
-  timeout_sec         = 5
-  healthy_threshold   = 2
-  unhealthy_threshold = 10 # 50 seconds
-  project = var.project_name
-
-  http_health_check {
-    request_path = "/"
-    port         = "80"
-  }
-}
-
-resource "google_compute_instance_group_manager" "appserver" {
-  name = "webserver-igm"
-  project = var.project_name
-
-  base_instance_name = "app"
-  zone               = var.vm_zone
+# create instance group manage 01
+resource "google_compute_instance_group_manager" "web-igm" {
+  name                = "webserver-igm"
+  base_instance_name  = "webserver"
+  zone                = data.google_compute_zones.available.names[0]
 
   version {
-    instance_template  = google_compute_instance_template.default.self_link
+    instance_template  = google_compute_instance_template.web-it.self_link
   }
 
-  #target_pools = [google_compute_target_pool.appserver.self_link]
-  target_size  = 2
-
-
+  target_size  = 1
 
   auto_healing_policies {
-    health_check      = google_compute_health_check.autohealing.self_link
+    health_check      = google_compute_health_check.hc-lb.self_link
     initial_delay_sec = 300
   }
 }
 
-resource "google_compute_backend_service" "staging_service" {
-  name      = "dev-service"
-  port_name = "http"
-  protocol  = "HTTP"
-  project = var.project_name
+# create instance group manage 02
+resource "google_compute_instance_group_manager" "web-igm-slave" {
+  name                = "webserver-igm02"
+  base_instance_name  = "webserver02"
+  zone                = data.google_compute_zones.available.names[1]
 
-  backend {
-    group = google_compute_instance_group_manager.appserver.instance_group
+  version {
+    instance_template  = google_compute_instance_template.web-it.self_link
   }
 
-  health_checks = [
-    google_compute_health_check.autohealing.self_link,
-  ]
+  target_size  = 1
+
+  auto_healing_policies {
+    health_check      = google_compute_health_check.hc-lb.self_link
+    initial_delay_sec = 300
+  }
 }
-
-resource "google_compute_global_address" "default" {
-  name = "global-appserver-ip"
-  project = var.project_name
-}
-
-
-resource "google_compute_global_forwarding_rule" "default" {
-  name = "fw-rule"
-  project = var.project_name
-  target = google_compute_target_http_proxy.default.self_link
-  ip_address = google_compute_global_address.default.address
-  port_range = "80"
-}
-
-resource "google_compute_target_http_proxy" "default" {
-  name = "http-proxy"
-  project = var.project_name
-  url_map = google_compute_url_map.default.self_link
-}
-
-resource "google_compute_url_map" "default" {
-  name = "load-balancer"
-  project       = var.project_name
-  default_service = google_compute_backend_service.staging_service.self_link
-}
-
-# resource "google_compute_url_map" "default" {
-#   name = "load-balancer"
-#   description = "URL Map"
-#   project = var.project_name
-#   default_service = google_compute_backend_service.staging_service.self_link
-#
-#   host_rule {
-#     hosts = [google_compute_global_address.default.address]
-#     path_matcher = "allpaths"
-#   }
-#
-#   path_matcher {
-#     name            = "allpaths"
-#     default_service = google_compute_backend_service.staging_service.self_link
-#
-#   path_rule {
-#       paths   = ["/*"]
-#       service = google_compute_backend_service.staging_service.self_link
-#     }
-#   }
-#
-# }

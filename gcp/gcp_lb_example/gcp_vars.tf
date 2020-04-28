@@ -41,3 +41,15 @@ variable "subnet_range" {
 variable "gs_script" {
   default = "gs://my-laboratorio-web/ubuntu_web.sh"
 }
+
+variable "credentials_file" {
+  default = "mykeys.json"
+}
+
+variable "tf_bucket" {
+  default = "my-bucket"
+}
+
+variable "tf_prefix" {
+  default = "myprefix"
+}
