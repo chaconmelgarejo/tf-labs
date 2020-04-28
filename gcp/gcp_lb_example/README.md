@@ -5,6 +5,7 @@
 
 ![Image description](image/tf_lb_lab.jpeg)
 
+we will setting up: 
 * virtual network
 * subnet and fw rules
 * define region and az
