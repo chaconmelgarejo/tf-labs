@@ -1,3 +1,12 @@
+# tf-labs
+# create with good vibes by: @chaconmelgarejo
+# description: instances config
+
+
+provider "aws" {
+  region = var.aws_region
+}
+
 resource "aws_instance" "web1" {
   ami                    = data.aws_ami.ubuntu_ami.id
   instance_type          = var.vm_type
@@ -15,11 +24,10 @@ resource "aws_instance" "web1" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt update",
-      "sudo apt install -y apache2",
-      "cat <<EOF > /var/www/html/index.html\n<html><body><h1>Hola Red Server</h1>\n<p>This is Sparta!</p>\n</body></html>"
-
+      "sudo apt install nginx -y",
+      "sudo service nginx start"
     ]
+
   }
 
   tags = merge(local.common_tags, { Name = "${var.env_tag}-web1" })
@@ -44,9 +52,8 @@ resource "aws_instance" "web2" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt update",
-      "sudo apt install -y apache2",
-      "cat <<EOF > /var/www/html/index.html\n<html><body><h1>Hola Green Server</h1>\n<p>This is Sparta!</p>\n</body></html>"
+      "sudo apt install nginx -y",
+      "sudo service nginx start"
     ]
   }
 
@@ -55,6 +62,6 @@ resource "aws_instance" "web2" {
 }
 
 
-  output "aws_elb_public_dns" {
-    value = aws_elb.web.dns_name
+  output "aws_lb_public_dns" {
+    value = aws_lb.web.dns_name
   }

@@ -1,4 +1,6 @@
-
+# tf-labs
+# create with good vibes by: @chaconmelgarejo
+# description: networking config
 
 resource "aws_vpc" "vpc" {
   cidr_block = var.network_cidr
@@ -27,7 +29,7 @@ resource "aws_subnet" "subnet2" {
   cidr_block              = var.subnet2_range
   vpc_id                  = aws_vpc.vpc.id
   map_public_ip_on_launch = "true"
-  availability_zone       = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[2]
 
   tags = merge(local.common_tags, { Name = "${var.env_tag}-subnet2" })
 
@@ -55,8 +57,8 @@ resource "aws_route_table_association" "rta-subnet2" {
   route_table_id = aws_route_table.rtb.id
 }
 
-resource "aws_security_group" "elb-sg" {
-  name   = "service_elb_sg"
+resource "aws_security_group" "lb-sg" {
+  name   = "service_lb_sg"
   vpc_id = aws_vpc.vpc.id
 
   #Allow HTTP from anywhere
@@ -112,20 +114,54 @@ resource "aws_security_group" "service-sg" {
 
 }
 
-resource "aws_elb" "web" {
-  name = "service-elb"
+resource "aws_lb_target_group" "tg" {
+  name     = "tf-lb-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.vpc.id
 
-  subnets         = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
-  security_groups = [aws_security_group.elb-sg.id]
-  instances       = [aws_instance.web1.id,aws_instance.web2.id]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
+  health_check {
+    healthy_threshold   = 3
+    unhealthy_threshold = 10
+    timeout             = 5
+    interval            = 10
+    path                = "/"
+    port                = "80"
   }
+
+}
+
+resource "aws_lb_target_group_attachment" "test1" {
+  target_group_arn = aws_lb_target_group.tg.arn
+  target_id        = aws_instance.web1.id
+  port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "test2" {
+  target_group_arn = aws_lb_target_group.tg.arn
+  target_id        = aws_instance.web2.id
+  port             = 80
+}
+
+resource "aws_lb" "web" {
+  name                = "service-lb"
+  internal            = false
+  #load_balancer_type  = "application"
+  subnets         = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
+  security_groups = [aws_security_group.lb-sg.id]
+  #instances       = [aws_instance.web1.id,aws_instance.web2.id]
 
   tags = merge(local.common_tags, { Name = "${var.env_tag}-elb" })
 
+}
+
+resource "aws_lb_listener" "lb_listener" {
+  load_balancer_arn = aws_lb.web.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.tg.arn
+    type             = "forward"
+  }
 }
